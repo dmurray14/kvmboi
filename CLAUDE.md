@@ -2,7 +2,7 @@
 
 This project is a Python library (`kvmboi`) for controlling GL.iNet Comet KVM (PiKVM-compatible) devices on the local network.
 
-**Full API reference and usage patterns are in `KVMBOI.md` — read that file before using the library.**
+**Full API reference and usage patterns are in `README.md` — read that file before using the library.**
 
 ## Quick Reference
 
