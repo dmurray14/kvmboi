@@ -56,8 +56,22 @@ class AsyncMouse:
         self._client = client
 
     async def move(self, x: int, y: int) -> None:
-        """Move mouse to absolute coordinates."""
-        await self._client.ws_send("mouse_move", {"to": {"x": x, "y": y}})
+        """Move mouse to absolute coordinates, in screenshot pixels.
+
+        The PiKVM HID API takes absolute positions scaled to -32768..32767
+        across the screen, not pixels — sending pixels lands every move a hair
+        from screen center. Scale by the capture resolution (read once).
+        """
+        w, h = await self._screen_size()
+        await self._client.ws_send(
+            "mouse_move", {"to": {"x": _to_abs(x, w), "y": _to_abs(y, h)}}
+        )
+
+    async def _screen_size(self) -> tuple[int, int]:
+        if getattr(self, "_size", None) is None:
+            res = (await self._client._api_get("streamer"))["streamer"]["source"]["resolution"]
+            self._size = (int(res["width"]), int(res["height"]))
+        return self._size
 
     async def click(self, x: int | None = None, y: int | None = None, button: str = "left") -> None:
         """Click at coordinates. If x/y omitted, clicks at current position."""
@@ -105,3 +119,9 @@ class AsyncMouse:
     async def relative_move(self, delta_x: int, delta_y: int) -> None:
         """Move mouse by relative offset."""
         await self._client.ws_send("mouse_relative", {"delta": {"x": delta_x, "y": delta_y}})
+
+
+def _to_abs(v: int, size: int) -> int:
+    """Pixel (0..size-1) -> PiKVM absolute coordinate (-32768..32767)."""
+    pos = round(v * 65535 / max(size - 1, 1)) - 32768
+    return max(-32768, min(32767, pos))

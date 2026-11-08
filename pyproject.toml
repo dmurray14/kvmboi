@@ -13,6 +13,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# H.264-only Comet firmware: screenshot() decodes a stream frame
+screenshot = [
+    "av>=12",
+    "pillow>=10",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
